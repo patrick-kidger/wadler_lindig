@@ -4,7 +4,7 @@ import functools as ft
 import sys
 import types
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, NamedTuple, cast
+from typing import Any, Generic, NamedTuple, TypeVar, Union, cast, get_args, get_origin
 
 from ._doc_utils import doc_obj
 from ._wadler_lindig import (
@@ -119,8 +119,7 @@ def bracketed(
 
 
 comma: AbstractDoc = doc_obj(
-    TextDoc(",") + BreakDoc(" "),
-    "A shorthand for `TextDoc(',') + BreakDoc(' ')`."
+    TextDoc(",") + BreakDoc(" "), "A shorthand for `TextDoc(',') + BreakDoc(' ')`."
 )
 
 
@@ -296,6 +295,46 @@ def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
     )
 
 
+def _pformat_hint_when_typing(x, **kwargs) -> AbstractDoc:
+    if x in (None, types.NoneType):
+        return TextDoc("None")
+    elif isinstance(x, type):
+        if x.__module__ in ("builtins", "typing", "collections.abc"):
+            return TextDoc(x.__qualname__)
+        else:
+            return TextDoc(f"{x.__module__}.{x.__qualname__}")
+    else:
+        return pdoc(x, **kwargs)
+
+
+def _pformat_generic_alias(obj, **kwargs) -> AbstractDoc:
+    docs = [_pformat_hint_when_typing(x, **kwargs) for x in get_args(obj)]
+    return bracketed(
+        begin=_pformat_hint_when_typing(get_origin(obj), **kwargs) + TextDoc("["),
+        docs=docs,
+        sep=comma,
+        end=TextDoc("]"),
+        indent=kwargs["indent"],
+    )
+
+
+def _pformat_union(obj, **kwargs) -> AbstractDoc:
+    bar = BreakDoc(" ") + TextDoc("| ")
+    docs = [_pformat_hint_when_typing(x, **kwargs) for x in get_args(obj)]
+    return join(bar, docs)
+
+
+_T = TypeVar("_T")
+
+
+class _Foo(Generic[_T]):
+    pass
+
+
+_generic_alias_types = (types.GenericAlias, type(_Foo[int]))
+_union_types = (types.UnionType, type(Union[bool, str]))
+
+
 def _none(_):
     return None
 
@@ -374,6 +413,11 @@ def pdoc(
         return _pformat_partial(obj, **kwargs)
     if isinstance(obj, types.FunctionType):
         return _pformat_function(obj, **kwargs)
+    if isinstance(obj, _union_types):
+        # Need to put this branch before generic alias, as unions trigger that too.
+        return _pformat_union(obj, **kwargs)
+    if isinstance(obj, _generic_alias_types):
+        return _pformat_generic_alias(obj, **kwargs)
     if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
         return _pformat_dataclass(obj, **kwargs)
     if _array_kind(obj) is not None:

@@ -1,3 +1,4 @@
+import collections.abc
 import dataclasses
 import functools as ft
 import typing
@@ -130,3 +131,59 @@ def test_complicated():
   z=i64[3,4](numpy)
 )"""
     assert out == expected_out
+
+
+def test_generic_alias():
+    # This has type `types.GenericAlias`...
+    x = dict[int, str]
+    out = wl.pformat(x, width=1)
+    assert (
+        out
+        == """dict[
+  int,
+  str
+]"""
+    )
+
+    # ...but this has a different type.
+    T1 = typing.TypeVar("T1")
+    T2 = typing.TypeVar("T2")
+    T3 = typing.TypeVar("T3")
+    T4 = typing.TypeVar("T4")
+
+    class Foo(typing.Generic[T1, T2, T3, T4]):
+        pass
+
+    class Bar:
+        pass
+
+    foo = Foo[int, typing.Any, collections.abc.Sequence, Bar]
+    out = wl.pformat(foo, width=1)
+    assert (
+        out
+        == """tests.test_definitions.test_generic_alias.<locals>.Foo[
+  int,
+  Any,
+  Sequence,
+  tests.test_definitions.test_generic_alias.<locals>.Bar
+]"""
+    )
+
+
+def test_union():
+    # This has type `types.UnionType`...
+    assert wl.pformat(int | str) == "int | str"
+    assert wl.pformat(int | str | bytes, width=1) == "int\n| str\n| bytes"
+
+    class Foo:
+        pass
+
+    # ...but this has a different type.
+    x = typing.Union[int, str, Foo]
+    expected_out = "int\n| str\n| tests.test_definitions.test_union.<locals>.Foo"
+    assert wl.pformat(x, width=1) == expected_out
+
+
+def test_optional():
+    # This has type `types.UnionType`...
+    assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"
