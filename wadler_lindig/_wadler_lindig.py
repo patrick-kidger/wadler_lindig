@@ -22,7 +22,7 @@ from ._ansi import ansi_strip
 
 class AbstractDoc:
     """Base class for all document types.
-    
+
     For more on the following shorthand methods, see
     [the methods example](./methods.ipynb).
     """
@@ -85,6 +85,7 @@ class ConcatDoc(AbstractDoc):
     width. You may wish to separate pieces with `BreakDoc`s to indicate this, for
     example.
     """
+
     children: tuple[AbstractDoc, ...]
 
     # Allow calling via both `ConcatDoc(foo, bar, baz)` for convenience, or
@@ -119,6 +120,7 @@ class NestDoc(AbstractDoc):
     """If in vertical mode, increase the indent after each newline by `indent` whilst
     displaying `child`.
     """
+
     child: AbstractDoc
     indent: int
 

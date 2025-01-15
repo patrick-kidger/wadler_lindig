@@ -1,7 +1,7 @@
 import dataclasses
 
 import wadler_lindig as wl
-from wadler_lindig import TextDoc as Txt, BreakDoc as Brk
+from wadler_lindig import BreakDoc as Brk, TextDoc as Txt
 
 
 def test_lindig():
