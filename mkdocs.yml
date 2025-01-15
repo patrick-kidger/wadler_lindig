@@ -74,6 +74,8 @@ plugins:
                 setup_commands:
                     - import pytkdocs_tweaks
                     - pytkdocs_tweaks.main()
+                    - import typing
+                    - typing.GENERATING_DOCUMENTATION = "wadler_lindig"
                 selection:
                     inherited_members: true  # Allow looking up inherited methods
                 rendering:
