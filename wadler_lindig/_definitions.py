@@ -298,7 +298,9 @@ def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
 def _pformat_hint_when_typing(x, **kwargs) -> AbstractDoc:
     if x in (None, types.NoneType):
         return TextDoc("None")
-    elif isinstance(x, type):
+    elif hasattr(x, "__module__") and hasattr(x, "__qualname__"):
+        # Not using an `isinstance` check as this doesn't work for e.g. `typing.Any` on
+        # Python 3.10.
         if x.__module__ in ("builtins", "typing", "collections.abc"):
             return TextDoc(x.__qualname__)
         else:
