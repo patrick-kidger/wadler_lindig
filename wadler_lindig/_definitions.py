@@ -282,7 +282,7 @@ def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
                 getattr(obj, field.name, _WithRepr("<uninitialised>")),
             )
             for field in dataclasses.fields(obj)
-            if field.repr
+            if field.repr and field.default is not dataclasses.MISSING
         ],
         **kwargs,
     )
