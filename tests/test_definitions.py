@@ -189,7 +189,7 @@ def test_optional():
     assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"
 
 
-def test_show_defaults():
+def test_hide_defaults():
     """Check if defaults are hidden when show_defaults=False and the default value has
     not been tweaked. (E.g. if the default name is "Dummy" and the user does not pass
     something else.)
@@ -202,10 +202,10 @@ def test_show_defaults():
         name: str = "Dummy"
 
     foo = Foo(3.14)
-    out = wl.pformat(foo, show_defaults=True)
+    out = wl.pformat(foo, hide_defaults=False)
     assert out == "Foo(number=3.14, name='Dummy')"
 
-    out = wl.pformat(foo)  # show_defaults=False
+    out = wl.pformat(foo)  # hide_defaults=True
     assert out == "Foo(number=3.14)"
 
     # Nested dataclasses
@@ -215,10 +215,10 @@ def test_show_defaults():
         num: int = 0
 
     bar = Bar(Foo(42.0))
-    out = wl.pformat(bar, show_defaults=True)
+    out = wl.pformat(bar, hide_defaults=False)
     assert out == "Bar(foo=Foo(number=42.0, name='Dummy'), num=0)"
 
-    out = wl.pformat(bar)  # show_defaults=False
+    out = wl.pformat(bar)  # hide_defaults=True
     assert out == "Bar(foo=Foo(number=42.0))"
 
     # Show defaults if tweaked

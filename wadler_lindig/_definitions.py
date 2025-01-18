@@ -275,34 +275,22 @@ def _pformat_function(obj: types.FunctionType, **kwargs) -> AbstractDoc:
 
 def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
     type_name = "_" + type(obj).__name__
-    if kwargs["show_defaults"] is True:
-        objs = named_objs(
-            [
-                (
-                    field.name.removeprefix(type_name),
-                    getattr(obj, field.name, _WithRepr("<uninitialised>")),
-                )
-                for field in dataclasses.fields(obj)
-                if field.repr
-            ],
-            **kwargs,
-        )
-    else:
-        objs = named_objs(
-            [
-                (
-                    field.name.removeprefix(type_name),
-                    getattr(obj, field.name, _WithRepr("<uninitialised>")),
-                )
-                for field in dataclasses.fields(obj)
-                if field.repr
-                and (
-                    field.default is dataclasses.MISSING
-                    or field.default != getattr(obj, field.name)
-                )
-            ],
-            **kwargs,
-        )
+    objs = named_objs(
+        [
+            (
+                field.name.removeprefix(type_name),
+                getattr(obj, field.name, _WithRepr("<uninitialised>")),
+            )
+            for field in dataclasses.fields(obj)
+            if field.repr
+            and (
+                not kwargs["hide_defaults"]
+                or field.default is dataclasses.MISSING
+                or field.default != getattr(obj, field.name)
+            )
+        ],
+        **kwargs,
+    )
     return bracketed(
         begin=TextDoc(obj.__class__.__name__ + "("),
         docs=objs,
@@ -363,7 +351,7 @@ def pdoc(
     indent: int = 2,
     short_arrays: bool = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
-    show_defaults: bool = False,
+    hide_defaults: bool = True,
     **kwargs,
 ) -> AbstractDoc:
     """Formats an object into a Wadler–Lindig document. Such documents are essentially
@@ -380,7 +368,7 @@ def pdoc(
     - `custom`: a way to pretty-doc custom types. This will be called on every object it
         encounters. If its return is `None` then the usual behaviour will be performed.
         If its return is an `AbstractDoc` then that will be used instead.
-    - `show_defaults`: whether to show the default values of dataclass fields.
+    - `hide_defaults`: whether to show the default values of dataclass fields.
     - `**kwargs`: all kwargs are forwarded on to all `__pdoc__` calls, as an
         escape hatch for custom behaviour.
 
@@ -404,7 +392,7 @@ def pdoc(
     kwargs["indent"] = indent
     kwargs["short_arrays"] = short_arrays
     kwargs["custom"] = custom
-    kwargs["show_defaults"] = show_defaults
+    kwargs["hide_defaults"] = hide_defaults
 
     if isinstance(obj, AbstractDoc):
         return obj
@@ -455,7 +443,7 @@ def pformat(
     indent: int = 2,
     short_arrays: bool = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
-    show_defaults: bool = False,
+    hide_defaults: bool = True,
     **kwargs,
 ) -> str:
     """As [`wadler_lindig.pprint`][], but returns a string instead of printing to
@@ -467,7 +455,7 @@ def pformat(
         indent=indent,
         short_arrays=short_arrays,
         custom=custom,
-        show_defaults=show_defaults,
+        hide_defaults=hide_defaults,
         **kwargs,
     )
     return pformat_doc(doc, width)
@@ -480,7 +468,7 @@ def pprint(
     indent: int = 2,
     short_arrays: bool = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
-    show_defaults: bool = False,
+    hide_defaults: bool = True,
     **kwargs,
 ) -> None:
     """Pretty-prints an object to stdout.
@@ -498,7 +486,7 @@ def pprint(
     - `custom`: a way to pretty-print custom types. This will be called on every object
         it . If its return is `None` then the default behaviour will be performed. If
         its return is an [`wadler_lindig.AbstractDoc`][] then that will be used instead.
-    - `show_defaults`: whether to show the default values of dataclass fields.
+    - `hide_defaults`: whether to show the default values of dataclass fields.
     - `**kwargs`: all other unrecognized kwargs are forwarded on to any `__pdoc__`
         methods encountered, as an escape hatch for custom behaviour.
 
@@ -526,7 +514,7 @@ def pprint(
             indent=indent,
             short_arrays=short_arrays,
             custom=custom,
-            show_defaults=show_defaults,
+            hide_defaults=hide_defaults,
             **kwargs,
         )
     )
