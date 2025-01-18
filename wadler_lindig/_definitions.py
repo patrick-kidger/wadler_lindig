@@ -275,22 +275,14 @@ def _pformat_function(obj: types.FunctionType, **kwargs) -> AbstractDoc:
 
 def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
     type_name = "_" + type(obj).__name__
-    objs = named_objs(
-        [
-            (
-                field.name.removeprefix(type_name),
-                getattr(obj, field.name, _WithRepr("<uninitialised>")),
-            )
-            for field in dataclasses.fields(obj)
-            if field.repr
-            and (
-                not kwargs["hide_defaults"]
-                or field.default is dataclasses.MISSING
-                or field.default != getattr(obj, field.name)
-            )
-        ],
-        **kwargs,
-    )
+    uninitialised = _WithRepr("<uninitialised>")
+    objs = []
+    for field in dataclasses.fields(obj):
+        if field.repr:
+            value = getattr(obj, field.name, uninitialised)
+            if not (kwargs["hide_defaults"] and value is field.default):
+                objs.append((field.name.removeprefix(type_name), value))
+    objs = named_objs(objs, **kwargs)
     return bracketed(
         begin=TextDoc(obj.__class__.__name__ + "("),
         docs=objs,
