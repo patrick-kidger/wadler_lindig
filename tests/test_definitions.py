@@ -226,13 +226,29 @@ def test_hide_defaults():
     out = wl.pformat(foo)
     assert out == "Foo(number=42.0, name='Answer')"
 
+    # Nonscalar fields
     @dataclasses.dataclass
     class Baz:
         array: np.ndarray
 
-        def __init__(self, array: np.ndarray = np.ones((3, 4))):
+        def __init__(self, array: np.ndarray):
             self.array = array
 
-    baz = Baz()
+    baz = Baz(np.ones((3, 4)))
     out = wl.pformat(baz)
-    assert out == "Baz()"
+    assert out == "Baz(array=f64[3,4](numpy))"
+
+    # Defaults defined in __init__ are currently not recognized as default values for
+    # dataclass fields.
+    # https://github.com/patrick-kidger/wadler_lindig/pull/3
+    # @dataclasses.dataclass
+    # class Wrapped:
+    #     foo: Foo
+
+    #     # Mismatch attribute and parameter names
+    #     def __init__(self, some_foo: Foo = Foo(3.14)):
+    #         self.foo = some_foo
+
+    # wrapped = Wrapped()
+    # out = wl.pformat(wrapped)
+    # assert out == "Wrapped()"  # Will fail
