@@ -225,3 +225,11 @@ def test_hide_defaults():
     foo = Foo(42.0, name="Answer")
     out = wl.pformat(foo)
     assert out == "Foo(number=42.0, name='Answer')"
+
+    @dataclasses.dataclass
+    class Baz:
+        array: np.ndarray
+
+    baz = Baz(np.ones((3, 4)))
+    out = wl.pformat(baz)
+    assert out == "Baz(array=f64[3,4](numpy))"
