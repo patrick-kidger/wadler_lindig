@@ -192,7 +192,7 @@ def test_optional():
 def test_show_defaults():
     """Check if defaults are hidden when show_defaults=False and the default value has
     not been tweaked. (E.g. if the default name is "Dummy" and the user does not pass
-    something else.) 
+    something else.)
     """
 
     # Simple case
@@ -200,7 +200,7 @@ def test_show_defaults():
     class Foo:
         number: float
         name: str = "Dummy"
-    
+
     foo = Foo(3.14)
     out = wl.pformat(foo, show_defaults=True)
     assert out == "Foo(number=3.14, name='Dummy')"
@@ -214,7 +214,7 @@ def test_show_defaults():
         foo: Foo
         num: int = 0
 
-    bar = Bar(Foo(42.))
+    bar = Bar(Foo(42.0))
     out = wl.pformat(bar, show_defaults=True)
     assert out == "Bar(foo=Foo(number=42.0, name='Dummy'), num=0)"
 
@@ -222,6 +222,6 @@ def test_show_defaults():
     assert out == "Bar(foo=Foo(number=42.0))"
 
     # Show defaults if tweaked
-    foo = Foo(42., name="Answer")
+    foo = Foo(42.0, name="Answer")
     out = wl.pformat(foo)
     assert out == "Foo(number=42.0, name='Answer')"
