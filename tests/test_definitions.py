@@ -187,3 +187,30 @@ def test_union():
 def test_optional():
     # This has type `types.UnionType`...
     assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"
+
+
+def test_show_defaults():
+    """Check if defaults are hidden when show_defaults=False."""
+    @dataclasses.dataclass
+    class Foo:
+        number: float
+        name: str = "Dummy"
+    
+    foo = Foo(3.14)
+    out = wl.pformat(foo, show_defaults=True)
+    assert out == "Foo(number=3.14, name='Dummy')"
+
+    out = wl.pformat(foo)  # show_defaults=False
+    assert out == "Foo(number=3.14)"
+
+    @dataclasses.dataclass
+    class Bar:
+        number: float = 3.14
+        name: str = "Dummy"
+    
+    bar = Bar()
+    out = wl.pformat(bar, show_defaults=True)
+    assert out == "Bar(number=3.14, name='Dummy')"
+
+    out = wl.pformat(bar)  # show_defaults=False
+    assert out == "Bar()"
