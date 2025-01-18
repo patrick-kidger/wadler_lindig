@@ -230,6 +230,9 @@ def test_hide_defaults():
     class Baz:
         array: np.ndarray
 
-    baz = Baz(np.ones((3, 4)))
+        def __init__(self, array: np.ndarray = np.ones((3, 4))):
+            self.array = array
+
+    baz = Baz()
     out = wl.pformat(baz)
-    assert out == "Baz(array=f64[3,4](numpy))"
+    assert out == "Baz()"
