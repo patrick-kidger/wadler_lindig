@@ -295,7 +295,11 @@ def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
                     getattr(obj, field.name, _WithRepr("<uninitialised>")),
                 )
                 for field in dataclasses.fields(obj)
-                if field.repr and field.default is dataclasses.MISSING
+                if field.repr
+                and (
+                    field.default is dataclasses.MISSING
+                    or field.default != getattr(obj, field.name)
+                )
             ],
             **kwargs,
         )
@@ -494,7 +498,7 @@ def pprint(
     - `custom`: a way to pretty-print custom types. This will be called on every object
         it . If its return is `None` then the default behaviour will be performed. If
         its return is an [`wadler_lindig.AbstractDoc`][] then that will be used instead.
-    - `show_defaults`: whether to show the default values of dataclass fields. 
+    - `show_defaults`: whether to show the default values of dataclass fields.
     - `**kwargs`: all other unrecognized kwargs are forwarded on to any `__pdoc__`
         methods encountered, as an escape hatch for custom behaviour.
 
