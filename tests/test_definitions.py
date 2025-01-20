@@ -187,3 +187,68 @@ def test_union():
 def test_optional():
     # This has type `types.UnionType`...
     assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"
+
+
+def test_hide_defaults():
+    """Check if defaults are hidden when show_defaults=False and the default value has
+    not been tweaked. (E.g. if the default name is "Dummy" and the user does not pass
+    something else.)
+    """
+
+    # Simple case
+    @dataclasses.dataclass
+    class Foo:
+        number: float
+        name: str = "Dummy"
+
+    foo = Foo(3.14)
+    out = wl.pformat(foo, hide_defaults=False)
+    assert out == "Foo(number=3.14, name='Dummy')"
+
+    out = wl.pformat(foo)  # hide_defaults=True
+    assert out == "Foo(number=3.14)"
+
+    # Nested dataclasses
+    @dataclasses.dataclass
+    class Bar:
+        foo: Foo
+        num: int = 0
+
+    bar = Bar(Foo(42.0))
+    out = wl.pformat(bar, hide_defaults=False)
+    assert out == "Bar(foo=Foo(number=42.0, name='Dummy'), num=0)"
+
+    out = wl.pformat(bar)  # hide_defaults=True
+    assert out == "Bar(foo=Foo(number=42.0))"
+
+    # Show defaults if tweaked
+    foo = Foo(42.0, name="Answer")
+    out = wl.pformat(foo)
+    assert out == "Foo(number=42.0, name='Answer')"
+
+    # Nonscalar fields
+    @dataclasses.dataclass
+    class Baz:
+        array: np.ndarray
+
+        def __init__(self, array: np.ndarray):
+            self.array = array
+
+    baz = Baz(np.ones((3, 4)))
+    out = wl.pformat(baz)
+    assert out == "Baz(array=f64[3,4](numpy))"
+
+    # Defaults defined in __init__ are currently not recognized as default values for
+    # dataclass fields.
+    # https://github.com/patrick-kidger/wadler_lindig/pull/3
+    # @dataclasses.dataclass
+    # class Wrapped:
+    #     foo: Foo
+
+    #     # Mismatch attribute and parameter names
+    #     def __init__(self, some_foo: Foo = Foo(3.14)):
+    #         self.foo = some_foo
+
+    # wrapped = Wrapped()
+    # out = wl.pformat(wrapped)
+    # assert out == "Wrapped()"  # Will fail
