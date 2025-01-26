@@ -170,6 +170,10 @@ def test_generic_alias():
     )
 
 
+def test_nested_generic():
+    assert wl.pformat(tuple[tuple[int, str]]) == "tuple[tuple[int, str]]"
+
+
 def test_union():
     # This has type `types.UnionType`...
     assert wl.pformat(int | str) == "int | str"

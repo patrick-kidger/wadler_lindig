@@ -295,6 +295,10 @@ def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
 def _pformat_hint_when_typing(x, **kwargs) -> AbstractDoc:
     if x in (None, types.NoneType):
         return TextDoc("None")
+    elif isinstance(x, _union_types):
+        return _pformat_union(x, **kwargs)
+    elif isinstance(x, _generic_alias_types):
+        return _pformat_generic_alias(x, **kwargs)
     elif hasattr(x, "__module__") and hasattr(x, "__qualname__"):
         # Not using an `isinstance` check as this doesn't work for e.g. `typing.Any` on
         # Python 3.10.
@@ -332,6 +336,7 @@ class _Foo(Generic[_T]):
 
 _generic_alias_types = (types.GenericAlias, type(_Foo[int]))
 _union_types = (types.UnionType, type(Union[bool, str]))
+_type_types = _generic_alias_types + _union_types
 
 
 def _none(_):
@@ -415,11 +420,8 @@ def pdoc(
         return _pformat_partial(obj, **kwargs)
     if isinstance(obj, types.FunctionType):
         return _pformat_function(obj, **kwargs)
-    if isinstance(obj, _union_types):
-        # Need to put this branch before generic alias, as unions trigger that too.
-        return _pformat_union(obj, **kwargs)
-    if isinstance(obj, _generic_alias_types):
-        return _pformat_generic_alias(obj, **kwargs)
+    if isinstance(obj, _type_types):
+        return _pformat_hint_when_typing(obj, **kwargs)
     if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
         return _pformat_dataclass(obj, **kwargs)
     if _array_kind(obj) is not None:
