@@ -349,6 +349,7 @@ def pdoc(
     short_arrays: bool = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
     hide_defaults: bool = True,
+    seen_ids: None | set[int] = None,
     **kwargs,
 ) -> AbstractDoc:
     """Formats an object into a Wadler–Lindig document. Such documents are essentially
@@ -366,6 +367,10 @@ def pdoc(
         encounters. If its return is `None` then the usual behaviour will be performed.
         If its return is an `AbstractDoc` then that will be used instead.
     - `hide_defaults`: whether to show the default values of dataclass fields.
+    - `seen_ids`: the `id(...)` of any Python objects that have already been seen, and
+        should not be further introspected to avoid recursion errors (e.g.
+        `x = []; x.append(x)`). Note that for efficiency, this argument will be mutated
+        with the ids encountered.
     - `**kwargs`: all kwargs are forwarded on to all `__pdoc__` calls, as an
         escape hatch for custom behaviour.
 
@@ -386,13 +391,21 @@ def pdoc(
         libraries. (For which you cannot add a `__pdoc__` method yourself.)
     """
 
+    if seen_ids is None:
+        seen_ids = set()
+
+    if id(obj) in seen_ids:
+        return TextDoc("<recursive>")
+    seen_ids.add(id(obj))
+
+    if isinstance(obj, AbstractDoc):
+        return obj
+
     kwargs["indent"] = indent
     kwargs["short_arrays"] = short_arrays
     kwargs["custom"] = custom
     kwargs["hide_defaults"] = hide_defaults
-
-    if isinstance(obj, AbstractDoc):
-        return obj
+    kwargs["seen_ids"] = seen_ids
 
     maybe_custom = custom(obj)
     if maybe_custom is not None:
@@ -463,6 +476,7 @@ def pprint(
     short_arrays: bool = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
     hide_defaults: bool = True,
+    seen_ids: None | set[int] = None,
     **kwargs,
 ) -> None:
     """Pretty-prints an object to stdout.
@@ -481,6 +495,10 @@ def pprint(
         it . If its return is `None` then the default behaviour will be performed. If
         its return is an [`wadler_lindig.AbstractDoc`][] then that will be used instead.
     - `hide_defaults`: whether to show the default values of dataclass fields.
+    - `seen_ids`: the `id(...)` of any Python objects that have already been seen, and
+        should not be further introspected to avoid recursion errors (e.g.
+        `x = []; x.append(x)`). Note that for efficiency, this argument will be mutated
+        with the ids encountered.
     - `**kwargs`: all other unrecognized kwargs are forwarded on to any `__pdoc__`
         methods encountered, as an escape hatch for custom behaviour.
 
@@ -509,6 +527,7 @@ def pprint(
             short_arrays=short_arrays,
             custom=custom,
             hide_defaults=hide_defaults,
+            seen_ids=seen_ids,
             **kwargs,
         )
     )

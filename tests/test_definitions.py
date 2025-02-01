@@ -256,3 +256,9 @@ def test_hide_defaults():
     # wrapped = Wrapped()
     # out = wl.pformat(wrapped)
     # assert out == "Wrapped()"  # Will fail
+
+
+def test_recursive():
+    x = []
+    x.append(x)
+    assert wl.pformat(x) == "[<recursive>]"
