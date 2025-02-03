@@ -262,3 +262,9 @@ def test_recursive():
     x = []
     x.append(x)
     assert wl.pformat(x) == "[<recursive>]"
+
+    # And in particular that the two identical objects don't count as recursive.
+    assert (
+        wl.pformat([test_recursive, test_recursive])
+        == "[<function test_recursive>, <function test_recursive>]"
+    )

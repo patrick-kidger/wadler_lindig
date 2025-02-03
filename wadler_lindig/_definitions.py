@@ -1,3 +1,4 @@
+import contextlib
 import dataclasses
 import difflib
 import functools as ft
@@ -337,6 +338,17 @@ class _Foo(Generic[_T]):
 _generic_alias_types = (types.GenericAlias, type(_Foo[int]))
 _union_types = (types.UnionType, type(Union[bool, str]))
 _type_types = _generic_alias_types + _union_types
+del _Foo, _T
+
+
+@contextlib.contextmanager
+def _seen_context(seen, obj):
+    id_ = id(obj)
+    seen.add(id_)
+    try:
+        yield
+    finally:
+        seen.remove(id_)
 
 
 def _none(_):
@@ -396,7 +408,6 @@ def pdoc(
 
     if id(obj) in seen_ids:
         return TextDoc("<recursive>")
-    seen_ids.add(id(obj))
 
     if isinstance(obj, AbstractDoc):
         return obj
@@ -407,40 +418,41 @@ def pdoc(
     kwargs["hide_defaults"] = hide_defaults
     kwargs["seen_ids"] = seen_ids
 
-    maybe_custom = custom(obj)
-    if maybe_custom is not None:
-        return maybe_custom
+    with _seen_context(seen_ids, obj):
+        maybe_custom = custom(obj)
+        if maybe_custom is not None:
+            return maybe_custom
 
-    if hasattr(type(obj), "__pdoc__"):
-        custom_pp = obj.__pdoc__(**kwargs)
-        if isinstance(custom_pp, AbstractDoc):
-            return custom_pp.group()
-        # else it's some non-pretty-print `__pdoc__` method; ignore.
+        if hasattr(type(obj), "__pdoc__"):
+            custom_pp = obj.__pdoc__(**kwargs)
+            if isinstance(custom_pp, AbstractDoc):
+                return custom_pp.group()
+            # else it's some non-pretty-print `__pdoc__` method; ignore.
 
-    if isinstance(obj, tuple):
-        if hasattr(obj, "_fields"):
-            return _pformat_namedtuple(cast(NamedTuple, obj), **kwargs)
-        return _pformat_tuple(obj, **kwargs)
-    if isinstance(obj, list):
-        return _pformat_list(obj, **kwargs)
-    if isinstance(obj, dict):
-        return _pformat_dict(obj, **kwargs)
-    if isinstance(obj, set):
-        return _pformat_set(obj, **kwargs)
-    if isinstance(obj, frozenset):
-        return _pformat_frozenset(obj, **kwargs)
-    if isinstance(obj, ft.partial):
-        return _pformat_partial(obj, **kwargs)
-    if isinstance(obj, types.FunctionType):
-        return _pformat_function(obj, **kwargs)
-    if isinstance(obj, _type_types):
-        return _pformat_hint_when_typing(obj, **kwargs)
-    if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
-        return _pformat_dataclass(obj, **kwargs)
-    if _array_kind(obj) is not None:
-        return _pformat_ndarray(obj, **kwargs)
-    # str, bool, int, float, complex etc.
-    return TextDoc(repr(obj))
+        if isinstance(obj, tuple):
+            if hasattr(obj, "_fields"):
+                return _pformat_namedtuple(cast(NamedTuple, obj), **kwargs)
+            return _pformat_tuple(obj, **kwargs)
+        if isinstance(obj, list):
+            return _pformat_list(obj, **kwargs)
+        if isinstance(obj, dict):
+            return _pformat_dict(obj, **kwargs)
+        if isinstance(obj, set):
+            return _pformat_set(obj, **kwargs)
+        if isinstance(obj, frozenset):
+            return _pformat_frozenset(obj, **kwargs)
+        if isinstance(obj, ft.partial):
+            return _pformat_partial(obj, **kwargs)
+        if isinstance(obj, types.FunctionType):
+            return _pformat_function(obj, **kwargs)
+        if isinstance(obj, _type_types):
+            return _pformat_hint_when_typing(obj, **kwargs)
+        if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+            return _pformat_dataclass(obj, **kwargs)
+        if _array_kind(obj) is not None:
+            return _pformat_ndarray(obj, **kwargs)
+        # str, bool, int, float, complex etc.
+        return TextDoc(repr(obj))
 
 
 def pformat(
