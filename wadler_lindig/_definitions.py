@@ -234,7 +234,12 @@ def _pformat_dict(obj: dict, **kwargs) -> AbstractDoc:
 def _array_kind(x) -> None | str:
     # For pragmatic reasons we ship with support for NumPy + PyTorch + JAX out of the
     # box.
-    for module, array in [("numpy", "ndarray"), ("torch", "Tensor"), ("jax", "Array")]:
+    for module, array in [
+        ("numpy", "ndarray"),
+        ("torch", "Tensor"),
+        ("jax", "Array"),
+        ("mlx.core", "array"),
+    ]:
         if module in sys.modules and isinstance(x, getattr(sys.modules[module], array)):
             return module
     return None
