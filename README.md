@@ -13,8 +13,6 @@ Main features:
 - Supports ANSI escape codes and colours.
 - Zero dependencies.
 
-**Example use cases:**
-
 ## Installation
 
 ```bash
