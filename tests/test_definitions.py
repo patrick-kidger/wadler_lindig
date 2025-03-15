@@ -268,3 +268,29 @@ def test_recursive():
         wl.pformat([test_recursive, test_recursive])
         == "[<function test_recursive>, <function test_recursive>]"
     )
+
+
+def test_literal():
+    assert wl.pformat(typing.Literal) == "Literal"
+    assert wl.pformat(typing.Literal[1]) == "Literal[1]"
+    assert wl.pformat(typing.Literal[1, "foo"]) == "Literal[1, 'foo']"
+
+
+def test_generic_alias_with_custom():
+    T = typing.TypeVar("T")
+
+    class Foo(typing.Generic[T]):
+        pass
+
+    def custom(x):
+        if x is Foo:
+            return wl.TextDoc("Bar")
+
+    assert wl.pformat(Foo, custom=custom) == "Bar"
+    assert wl.pformat(Foo[int], custom=custom) == "Bar[int]"
+    assert wl.pformat(Foo[Foo[int]], custom=custom) == "Bar[Bar[int]]"
+
+
+def test_ellipsis():
+    assert wl.pformat(...) == "..."
+    assert wl.pformat(collections.abc.Callable[..., int]) == "Callable[..., int]"

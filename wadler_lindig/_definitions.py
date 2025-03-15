@@ -4,10 +4,20 @@ import difflib
 import functools as ft
 import sys
 import types
+import typing
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, Generic, NamedTuple, TypeVar, Union, cast, get_args, get_origin
+from typing import (
+    Any,
+    Generic,
+    Literal,
+    NamedTuple,
+    TypeVar,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+)
 
-from ._doc_utils import doc_obj
 from ._wadler_lindig import (
     AbstractDoc,
     BreakDoc,
@@ -119,11 +129,6 @@ def bracketed(
         return (begin + nested + end).group()
 
 
-comma: AbstractDoc = doc_obj(
-    TextDoc(",") + BreakDoc(" "), "A shorthand for `TextDoc(',') + BreakDoc(' ')`."
-)
-
-
 def join(sep: AbstractDoc, docs: Sequence[AbstractDoc]) -> AbstractDoc:
     """Concatenates `objs` together separated by `sep`.
 
@@ -159,6 +164,15 @@ def named_objs(pairs: Iterable[tuple[str, Any]], **kwargs) -> list[AbstractDoc]:
     key-value pair.
     """
     return [TextDoc(key) + TextDoc("=") + pdoc(value, **kwargs) for key, value in pairs]
+
+
+comma: AbstractDoc = TextDoc(",") + BreakDoc(" ")
+if getattr(typing, "GENERATING_DOCUMENTATION", "") == "wadler-lindig":
+    # Needed to have mkdocstrings not crash :D
+    object.__setattr__(comma, "__module__", __name__)
+    object.__setattr__(
+        comma, "__doc__", """A shorthand for `TextDoc(',') + BreakDoc(' ')`."""
+    )
 
 
 def _pformat_list(obj: list, **kwargs) -> AbstractDoc:
@@ -298,28 +312,16 @@ def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
     )
 
 
-def _pformat_hint_when_typing(x, **kwargs) -> AbstractDoc:
-    if x in (None, types.NoneType):
-        return TextDoc("None")
-    elif isinstance(x, _union_types):
-        return _pformat_union(x, **kwargs)
-    elif isinstance(x, _generic_alias_types):
-        return _pformat_generic_alias(x, **kwargs)
-    elif hasattr(x, "__module__") and hasattr(x, "__qualname__"):
-        # Not using an `isinstance` check as this doesn't work for e.g. `typing.Any` on
-        # Python 3.10.
-        if x.__module__ in ("builtins", "typing", "collections.abc"):
-            return TextDoc(x.__qualname__)
-        else:
-            return TextDoc(f"{x.__module__}.{x.__qualname__}")
-    else:
-        return pdoc(x, **kwargs)
+def _pformat_union(obj, **kwargs) -> AbstractDoc:
+    bar = BreakDoc(" ") + TextDoc("| ")
+    docs = [pdoc(x, **kwargs) for x in get_args(obj)]
+    return join(bar, docs)
 
 
 def _pformat_generic_alias(obj, **kwargs) -> AbstractDoc:
-    docs = [_pformat_hint_when_typing(x, **kwargs) for x in get_args(obj)]
+    docs = [pdoc(x, **kwargs) for x in get_args(obj)]
     return bracketed(
-        begin=_pformat_hint_when_typing(get_origin(obj), **kwargs) + TextDoc("["),
+        begin=pdoc(get_origin(obj), **kwargs) + TextDoc("["),
         docs=docs,
         sep=comma,
         end=TextDoc("]"),
@@ -327,10 +329,21 @@ def _pformat_generic_alias(obj, **kwargs) -> AbstractDoc:
     )
 
 
-def _pformat_union(obj, **kwargs) -> AbstractDoc:
-    bar = BreakDoc(" ") + TextDoc("| ")
-    docs = [_pformat_hint_when_typing(x, **kwargs) for x in get_args(obj)]
-    return join(bar, docs)
+def _pformat_type(obj: type, **kwargs) -> AbstractDoc:
+    del kwargs
+    if hasattr(obj, "__module__") and hasattr(obj, "__qualname__"):
+        if obj.__module__ in (
+            "builtins",
+            "typing",
+            "typing_extensions",
+            "collections.abc",
+        ):
+            return TextDoc(obj.__qualname__)
+        else:
+            return TextDoc(f"{obj.__module__}.{obj.__qualname__}")
+    else:
+        # Not sure if it's possible to end up here under normal circumstances.
+        return TextDoc(repr(obj))
 
 
 _T = TypeVar("_T")
@@ -340,9 +353,9 @@ class _Foo(Generic[_T]):
     pass
 
 
-_generic_alias_types = (types.GenericAlias, type(_Foo[int]))
 _union_types = (types.UnionType, type(Union[bool, str]))
-_type_types = _generic_alias_types + _union_types
+_generic_alias_types = (types.GenericAlias, type(_Foo[int]))
+_type_types = (type, type(Literal))
 del _Foo, _T
 
 
@@ -434,6 +447,8 @@ def pdoc(
                 return custom_pp.group()
             # else it's some non-pretty-print `__pdoc__` method; ignore.
 
+        if obj is None or obj is types.NoneType:
+            return TextDoc("None")
         if isinstance(obj, tuple):
             if hasattr(obj, "_fields"):
                 return _pformat_namedtuple(cast(NamedTuple, obj), **kwargs)
@@ -450,12 +465,19 @@ def pdoc(
             return _pformat_partial(obj, **kwargs)
         if isinstance(obj, types.FunctionType):
             return _pformat_function(obj, **kwargs)
+        if isinstance(obj, _union_types):
+            return _pformat_union(obj, **kwargs)
+        # The generic alias check has to come last as unions evaluate true for this one.
+        if isinstance(obj, _generic_alias_types):
+            return _pformat_generic_alias(obj, **kwargs)
         if isinstance(obj, _type_types):
-            return _pformat_hint_when_typing(obj, **kwargs)
+            return _pformat_type(obj)
         if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
             return _pformat_dataclass(obj, **kwargs)
         if _array_kind(obj) is not None:
             return _pformat_ndarray(obj, **kwargs)
+        if obj is ...:
+            return TextDoc("...")
         # str, bool, int, float, complex etc.
         return TextDoc(repr(obj))
 
