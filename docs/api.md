@@ -25,34 +25,34 @@ As a utility we offer some support for adding colours via ANSI escape codes, or 
 ## Wadler–Lindig documents
 
 ::: wadler_lindig.AbstractDoc
-    selection:
+    options:
         members:
             - __add__
             - group
             - nest
 
 ::: wadler_lindig.BreakDoc
-    selection:
+    options:
         members:
             - __init__
 
 ::: wadler_lindig.ConcatDoc
-    selection:
+    options:
         members:
             - __init__
 
 ::: wadler_lindig.GroupDoc
-    selection:
+    options:
         members:
             - __init__
 
 ::: wadler_lindig.NestDoc
-    selection:
+    options:
         members:
             - __init__
 
 ::: wadler_lindig.TextDoc
-    selection:
+    options:
         members:
             - __init__
 
@@ -65,8 +65,6 @@ As a utility we offer some support for adding colours via ANSI escape codes, or 
 ::: wadler_lindig.bracketed
 
 ::: wadler_lindig.comma
-    selection:
-        members: false
 
 ::: wadler_lindig.join
 

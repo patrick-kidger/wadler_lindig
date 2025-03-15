@@ -4,6 +4,7 @@ import difflib
 import functools as ft
 import sys
 import types
+import typing
 from collections.abc import Callable, Iterable, Sequence
 from typing import (
     Any,
@@ -17,7 +18,6 @@ from typing import (
     get_origin,
 )
 
-from ._doc_utils import doc_obj
 from ._wadler_lindig import (
     AbstractDoc,
     BreakDoc,
@@ -129,11 +129,6 @@ def bracketed(
         return (begin + nested + end).group()
 
 
-comma: AbstractDoc = doc_obj(
-    TextDoc(",") + BreakDoc(" "), "A shorthand for `TextDoc(',') + BreakDoc(' ')`."
-)
-
-
 def join(sep: AbstractDoc, docs: Sequence[AbstractDoc]) -> AbstractDoc:
     """Concatenates `objs` together separated by `sep`.
 
@@ -169,6 +164,15 @@ def named_objs(pairs: Iterable[tuple[str, Any]], **kwargs) -> list[AbstractDoc]:
     key-value pair.
     """
     return [TextDoc(key) + TextDoc("=") + pdoc(value, **kwargs) for key, value in pairs]
+
+
+comma: AbstractDoc = TextDoc(",") + BreakDoc(" ")
+if getattr(typing, "GENERATING_DOCUMENTATION", "") == "wadler-lindig":
+    # Needed to have mkdocstrings not crash :D
+    object.__setattr__(comma, "__module__", __name__)
+    object.__setattr__(
+        comma, "__doc__", """A shorthand for `TextDoc(',') + BreakDoc(' ')`."""
+    )
 
 
 def _pformat_list(obj: list, **kwargs) -> AbstractDoc:
