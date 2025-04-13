@@ -57,9 +57,9 @@ def test_function():
 
     h = ft.partial(f)
 
-    assert wl.pformat(f) == "<function f>"
-    assert wl.pformat(g) == "<wrapped function f>"
-    assert wl.pformat(h) == "partial(<function f>)"
+    assert wl.pformat(f) == "<function test_function.<locals>.f>"
+    assert wl.pformat(g) == "<wrapped function test_function.<locals>.f>"
+    assert wl.pformat(h) == "partial(<function test_function.<locals>.f>)"
 
 
 @pytest.mark.parametrize("sequence_type", (tuple, list))
@@ -100,23 +100,24 @@ def test_sequence(sequence_type, width):
     assert output == expected_output
 
 
+@dataclasses.dataclass
+class SomeDataclass:
+    foo: list[str]
+
+
+class SomeClass:
+    def __pdoc__(self, **kwargs):
+        return wl.pdoc(SomeDataclass(["lorem", "ipsum", "dolor sit amet"]), **kwargs)
+
+
+@dataclasses.dataclass
+class MyDataclass:
+    x: SomeClass
+    y: list[str]
+    z: np.ndarray
+
+
 def test_complicated():
-    @dataclasses.dataclass
-    class SomeDataclass:
-        foo: list[str]
-
-    class SomeClass:
-        def __pdoc__(self, **kwargs):
-            return wl.pdoc(
-                SomeDataclass(["lorem", "ipsum", "dolor sit amet"]), **kwargs
-            )
-
-    @dataclasses.dataclass
-    class MyDataclass:
-        x: SomeClass
-        y: list[str]
-        z: np.ndarray
-
     obj = MyDataclass(x=SomeClass(), y=["foo", "bar"], z=np.arange(12).reshape(3, 4))
     out = wl.pformat(obj, width=20)
     expected_out = """MyDataclass(
@@ -193,17 +194,34 @@ def test_optional():
     assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"
 
 
+# Simple case
+@dataclasses.dataclass
+class Foo:
+    number: float
+    name: str = "Dummy"
+
+
+# Nested dataclasses
+@dataclasses.dataclass
+class Bar:
+    foo: Foo
+    num: int = 0
+
+
+# Nonscalar fields
+@dataclasses.dataclass
+class Baz:
+    array: np.ndarray
+
+    def __init__(self, array: np.ndarray):
+        self.array = array
+
+
 def test_hide_defaults():
     """Check if defaults are hidden when show_defaults=False and the default value has
     not been tweaked. (E.g. if the default name is "Dummy" and the user does not pass
     something else.)
     """
-
-    # Simple case
-    @dataclasses.dataclass
-    class Foo:
-        number: float
-        name: str = "Dummy"
 
     foo = Foo(3.14)
     out = wl.pformat(foo, hide_defaults=False)
@@ -211,12 +229,6 @@ def test_hide_defaults():
 
     out = wl.pformat(foo)  # hide_defaults=True
     assert out == "Foo(number=3.14)"
-
-    # Nested dataclasses
-    @dataclasses.dataclass
-    class Bar:
-        foo: Foo
-        num: int = 0
 
     bar = Bar(Foo(42.0))
     out = wl.pformat(bar, hide_defaults=False)
@@ -229,14 +241,6 @@ def test_hide_defaults():
     foo = Foo(42.0, name="Answer")
     out = wl.pformat(foo)
     assert out == "Foo(number=42.0, name='Answer')"
-
-    # Nonscalar fields
-    @dataclasses.dataclass
-    class Baz:
-        array: np.ndarray
-
-        def __init__(self, array: np.ndarray):
-            self.array = array
 
     baz = Baz(np.ones((3, 4)))
     out = wl.pformat(baz)
@@ -294,3 +298,43 @@ def test_generic_alias_with_custom():
 def test_ellipsis():
     assert wl.pformat(...) == "..."
     assert wl.pformat(collections.abc.Callable[..., int]) == "Callable[..., int]"
+
+
+def test_dataclass_with_custom():
+    @dataclasses.dataclass
+    class X:
+        x: int
+
+    def custom(obj):
+        if obj is X:
+            return wl.TextDoc("Y")
+
+    assert wl.pformat(X(x=1), custom=custom) == "Y(x=1)"
+
+
+def test_show_module():
+    @dataclasses.dataclass
+    class X:
+        x: int
+
+    assert (
+        wl.pformat(test_show_module, show_function_module=True)
+        == f"<function {__name__}.test_show_module>"
+    )
+    assert (
+        wl.pformat(test_show_module, show_function_module=False)
+        == "<function test_show_module>"
+    )
+    assert (
+        wl.pformat(X, show_type_module=True)
+        == f"{__name__}.test_show_module.<locals>.X"
+    )
+    assert wl.pformat(X, show_type_module=False) == "test_show_module.<locals>.X"
+    assert (
+        wl.pformat(X(x=1), show_dataclass_module=True)
+        == f"{__name__}.test_show_module.<locals>.X(x=1)"
+    )
+    assert (
+        wl.pformat(X(x=1), show_dataclass_module=False)
+        == "test_show_module.<locals>.X(x=1)"
+    )

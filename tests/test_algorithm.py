@@ -37,16 +37,18 @@ end"""
     )
 
 
+class Foo:
+    def __pdoc__(self, **kwargs):
+        del kwargs
+        return wl.TextDoc("hello\nthere")
+
+
+@dataclasses.dataclass
+class Bar:
+    x: list[int | Foo]
+
+
 def test_newlines_in_text():
-    class Foo:
-        def __pdoc__(self, **kwargs):
-            del kwargs
-            return wl.TextDoc("hello\nthere")
-
-    @dataclasses.dataclass
-    class Bar:
-        x: list[int | Foo]
-
     bar = Bar(x=[Foo(), 3, Foo(), Foo()])
 
     out = wl.pformat(bar, width=50)

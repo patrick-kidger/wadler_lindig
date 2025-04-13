@@ -284,13 +284,19 @@ def _pformat_partial(obj: ft.partial, **kwargs) -> AbstractDoc:
     )
 
 
-def _pformat_function(obj: types.FunctionType, **kwargs) -> AbstractDoc:
+def _pformat_function(
+    obj: types.FunctionType, *, show_function_module: bool, **kwargs
+) -> AbstractDoc:
     del kwargs
     if hasattr(obj, "__wrapped__"):
         fn = "wrapped function"
     else:
         fn = "function"
-    return TextDoc(f"<{fn} {obj.__name__}>")
+    if show_function_module:
+        name = f"{obj.__module__}.{obj.__qualname__}"
+    else:
+        name = obj.__qualname__
+    return TextDoc(f"<{fn} {name}>")
 
 
 def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
@@ -303,8 +309,10 @@ def _pformat_dataclass(obj, **kwargs) -> AbstractDoc:
             if not (kwargs["hide_defaults"] and value is field.default):
                 objs.append((field.name.removeprefix(type_name), value))
     objs = named_objs(objs, **kwargs)
+    name_kwargs = kwargs.copy()
+    name_kwargs["show_type_module"] = kwargs["show_dataclass_module"]
     return bracketed(
-        begin=TextDoc(obj.__class__.__name__ + "("),
+        begin=pdoc(obj.__class__, **name_kwargs) + TextDoc("("),
         docs=objs,
         sep=comma,
         end=TextDoc(")"),
@@ -329,10 +337,10 @@ def _pformat_generic_alias(obj, **kwargs) -> AbstractDoc:
     )
 
 
-def _pformat_type(obj: type, **kwargs) -> AbstractDoc:
+def _pformat_type(obj: type, *, show_type_module: bool, **kwargs) -> AbstractDoc:
     del kwargs
     if hasattr(obj, "__module__") and hasattr(obj, "__qualname__"):
-        if obj.__module__ in (
+        if not show_type_module or obj.__module__ in (
             "builtins",
             "typing",
             "typing_extensions",
@@ -379,6 +387,9 @@ def pdoc(
     short_arrays: bool = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
     hide_defaults: bool = True,
+    show_type_module: bool = True,
+    show_dataclass_module: bool = False,
+    show_function_module: bool = False,
     seen_ids: None | set[int] = None,
     **kwargs,
 ) -> AbstractDoc:
@@ -397,6 +408,12 @@ def pdoc(
         encounters. If its return is `None` then the usual behaviour will be performed.
         If its return is an `AbstractDoc` then that will be used instead.
     - `hide_defaults`: whether to show the default values of dataclass fields.
+    - `show_type_module`: whether to show the name of the module for a type:
+         `somelib.SomeClass` versus `SomeClass`.
+    - `show_dataclass_module`: whether to show the name of the module for a dataclass
+         instance: `somelib.SomeClass()` versus `SomeClass()`.
+    - `show_function_module`: whether to show the name of the module for a function:
+         `<function some_fn>` versus `<function somelib.some_fn>`.
     - `seen_ids`: the `id(...)` of any Python objects that have already been seen, and
         should not be further introspected to avoid recursion errors (e.g.
         `x = []; x.append(x)`). Note that for efficiency, this argument will be mutated
@@ -435,6 +452,9 @@ def pdoc(
     kwargs["custom"] = custom
     kwargs["hide_defaults"] = hide_defaults
     kwargs["seen_ids"] = seen_ids
+    kwargs["show_type_module"] = show_type_module
+    kwargs["show_dataclass_module"] = show_dataclass_module
+    kwargs["show_function_module"] = show_function_module
 
     with _seen_context(seen_ids, obj):
         maybe_custom = custom(obj)
@@ -473,7 +493,7 @@ def pdoc(
         if isinstance(obj, _generic_alias_types):
             return _pformat_generic_alias(obj, **kwargs)
         if isinstance(obj, _type_types):
-            return _pformat_type(obj)
+            return _pformat_type(obj, **kwargs)
         if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
             return _pformat_dataclass(obj, **kwargs)
         if _array_kind(obj) is not None:
@@ -492,6 +512,9 @@ def pformat(
     short_arrays: bool = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
     hide_defaults: bool = True,
+    show_type_module: bool = True,
+    show_dataclass_module: bool = False,
+    show_function_module: bool = False,
     **kwargs,
 ) -> str:
     """As [`wadler_lindig.pprint`][], but returns a string instead of printing to
@@ -504,6 +527,9 @@ def pformat(
         short_arrays=short_arrays,
         custom=custom,
         hide_defaults=hide_defaults,
+        show_type_module=show_type_module,
+        show_dataclass_module=show_dataclass_module,
+        show_function_module=show_function_module,
         **kwargs,
     )
     return pformat_doc(doc, width)
@@ -517,7 +543,9 @@ def pprint(
     short_arrays: bool = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
     hide_defaults: bool = True,
-    seen_ids: None | set[int] = None,
+    show_type_module: bool = True,
+    show_dataclass_module: bool = False,
+    show_function_module: bool = False,
     **kwargs,
 ) -> None:
     """Pretty-prints an object to stdout.
@@ -536,10 +564,12 @@ def pprint(
         it . If its return is `None` then the default behaviour will be performed. If
         its return is an [`wadler_lindig.AbstractDoc`][] then that will be used instead.
     - `hide_defaults`: whether to show the default values of dataclass fields.
-    - `seen_ids`: the `id(...)` of any Python objects that have already been seen, and
-        should not be further introspected to avoid recursion errors (e.g.
-        `x = []; x.append(x)`). Note that for efficiency, this argument will be mutated
-        with the ids encountered.
+    - `show_type_module`: whether to show the name of the module for a type:
+         `somelib.SomeClass` versus `SomeClass`.
+    - `show_dataclass_module`: whether to show the name of the module for a dataclass
+         instance: `somelib.SomeClass()` versus `SomeClass()`.
+    - `show_function_module`: whether to show the name of the module for a function:
+         `<function some_fn>` versus `<function somelib.some_fn>`.
     - `**kwargs`: all other unrecognized kwargs are forwarded on to any `__pdoc__`
         methods encountered, as an escape hatch for custom behaviour.
 
@@ -568,7 +598,9 @@ def pprint(
             short_arrays=short_arrays,
             custom=custom,
             hide_defaults=hide_defaults,
-            seen_ids=seen_ids,
+            show_type_module=show_type_module,
+            show_dataclass_module=show_dataclass_module,
+            show_function_module=show_function_module,
             **kwargs,
         )
     )

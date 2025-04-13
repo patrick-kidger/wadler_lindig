@@ -20,7 +20,7 @@ name = "wadler_lindig"
 readme = "README.md"
 requires-python = ">=3.10"
 urls = {repository = "https://github.com/patrick-kidger/wadler_lindig"}
-version = "0.1.4"
+version = "0.1.5"
 
 [project.optional-dependencies]
 dev = ["numpy", "pre-commit", "pytest"]
