@@ -13,12 +13,13 @@ Then clone and install the library in development mode:
 ```bash
 git clone https://github.com/your-username-here/wadler_lindig.git
 cd wadler_lindig
-pip install -e '.[dev]'
+pip install -e .
 ```
 
 Then install the pre-commit hooks:
 
 ```bash
+pip install pre-commit
 pre-commit install
 ```
 
@@ -33,6 +34,7 @@ Now make your changes. Make sure to include additional tests if necessary.
 Next verify the tests all pass:
 
 ```bash
+pip install -e '.[dev]'
 pytest
 ```
 
@@ -52,9 +54,7 @@ Make your changes. You can then build the documentation by doing
 
 ```bash
 pip install -e '.[docs]'
-mkdocs build
 mkdocs serve
 ```
-(So you run `mkdocs` commands twice; our doc stack is a bit weird and needs this to get the correct module names in the documentation.)
 
 You can then see your local copy of the documentation by navigating to `localhost:8000` in a web browser.
