@@ -31,7 +31,7 @@ docs = [
   "mkdocs-ipynb==0.1.0",
   "mkdocs-material==9.6.7",
   "mkdocstrings[python]==0.28.3",
-  "pymdown-extensions==10.14.3",
+  "pymdown-extensions==10.14.3"
 ]
 
 [tool.hatch.build]
