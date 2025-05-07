@@ -184,14 +184,14 @@ def test_union():
         pass
 
     # ...but this has a different type.
-    x = typing.Union[int, str, Foo]
+    x = typing.Union[int, str, Foo]  # noqa: UP007
     expected_out = "int\n| str\n| tests.test_definitions.test_union.<locals>.Foo"
     assert wl.pformat(x, width=1) == expected_out
 
 
 def test_optional():
     # This has type `types.UnionType`...
-    assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"
+    assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"  # noqa: UP007
 
 
 # Simple case

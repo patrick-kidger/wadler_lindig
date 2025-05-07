@@ -361,7 +361,7 @@ class _Foo(Generic[_T]):
     pass
 
 
-_union_types = (types.UnionType, type(Union[bool, str]))
+_union_types = (types.UnionType, type(Union[bool, str]))  # noqa: UP007
 _generic_alias_types = (types.GenericAlias, type(_Foo[int]))
 _type_types = (type, type(Literal))
 del _Foo, _T
