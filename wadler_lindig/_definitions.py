@@ -390,6 +390,7 @@ def pdoc(
     show_type_module: bool = True,
     show_dataclass_module: bool = False,
     show_function_module: bool = False,
+    respect_pdoc: bool = True,
     seen_ids: None | set[int] = None,
     **kwargs,
 ) -> AbstractDoc:
@@ -455,13 +456,14 @@ def pdoc(
     kwargs["show_type_module"] = show_type_module
     kwargs["show_dataclass_module"] = show_dataclass_module
     kwargs["show_function_module"] = show_function_module
+    kwargs["respect_pdoc"] = respect_pdoc
 
     with _seen_context(seen_ids, obj):
         maybe_custom = custom(obj)
         if maybe_custom is not None:
             return maybe_custom
 
-        if hasattr(type(obj), "__pdoc__"):
+        if respect_pdoc and hasattr(type(obj), "__pdoc__"):
             custom_pp = obj.__pdoc__(**kwargs)
             if isinstance(custom_pp, AbstractDoc):
                 return custom_pp.group()
@@ -515,6 +517,7 @@ def pformat(
     show_type_module: bool = True,
     show_dataclass_module: bool = False,
     show_function_module: bool = False,
+    respect_pdoc: bool = True,
     **kwargs,
 ) -> str:
     """As [`wadler_lindig.pprint`][], but returns a string instead of printing to
@@ -530,6 +533,7 @@ def pformat(
         show_type_module=show_type_module,
         show_dataclass_module=show_dataclass_module,
         show_function_module=show_function_module,
+        respect_pdoc=respect_pdoc,
         **kwargs,
     )
     return pformat_doc(doc, width)
@@ -546,6 +550,7 @@ def pprint(
     show_type_module: bool = True,
     show_dataclass_module: bool = False,
     show_function_module: bool = False,
+    respect_pdoc: bool = True,
     **kwargs,
 ) -> None:
     """Pretty-prints an object to stdout.
@@ -601,6 +606,7 @@ def pprint(
             show_type_module=show_type_module,
             show_dataclass_module=show_dataclass_module,
             show_function_module=show_function_module,
+            respect_pdoc=respect_pdoc,
             **kwargs,
         )
     )

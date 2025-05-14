@@ -338,3 +338,41 @@ def test_show_module():
         wl.pformat(X(x=1), show_dataclass_module=False)
         == "test_show_module.<locals>.X(x=1)"
     )
+
+
+@pytest.mark.parametrize("foo_pdoc", (False, True))
+@pytest.mark.parametrize("bar_pdoc", (False, True))
+def test_no_respect_pdoc(foo_pdoc, bar_pdoc):
+    @dataclasses.dataclass
+    class Foo:
+        if foo_pdoc:
+
+            def __pdoc__(self, **kwargs):
+                return wl.TextDoc("hi")
+
+    @dataclasses.dataclass
+    class Bar:
+        foo: Foo
+
+        if bar_pdoc:
+
+            def __pdoc__(self, **kwargs):
+                return wl.pdoc(self.foo, **kwargs) + wl.TextDoc(" there")
+
+    Foo.__qualname__ = "Foo"
+    Bar.__qualname__ = "Bar"
+
+    bar = Bar(Foo())
+    out = wl.pformat(bar, show_dataclass_module=False)
+    out2 = wl.pformat(bar, respect_pdoc=False, show_dataclass_module=False)
+    if foo_pdoc:
+        if bar_pdoc:
+            assert out == "hi there"
+        else:
+            assert out == "Bar(foo=hi)"
+    else:
+        if bar_pdoc:
+            assert out == "Foo() there"
+        else:
+            assert out == "Bar(foo=Foo())"
+    assert out2 == "Bar(foo=Foo())"
