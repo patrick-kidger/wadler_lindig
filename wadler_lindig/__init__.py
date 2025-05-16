@@ -11,6 +11,7 @@ from ._definitions import (
     pdoc as pdoc,
     pformat as pformat,
     pprint as pprint,
+    pformat_doc as pformat_doc,
 )
 from ._wadler_lindig import (
     AbstractDoc as AbstractDoc,

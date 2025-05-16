@@ -8,6 +8,10 @@ The main two functions are [`wadler_lindig.pprint`][] and [`wadler_lindig.pforma
 
 ::: wadler_lindig.pformat
 
+The lower-level function [`wadler_lindig.pformat_doc`][] is used to format a Wadler–Lindig document. This is the function that is called by `pprint` and `pformat`.
+
+::: wadler_lindig.pformat_doc
+
 ## Pretty diffs
 
 As a utility we offer [`wadler_lindig.pdiff`][] as a quick way to diff two strings. This is a thin wrapper around the Python built-in library `difflib`.
