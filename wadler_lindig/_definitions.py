@@ -186,23 +186,29 @@ def _pformat_list(obj: list, **kwargs) -> AbstractDoc:
 
 
 def _pformat_set(obj: set, **kwargs) -> AbstractDoc:
-    return bracketed(
-        begin=TextDoc("{"),
-        docs=[pdoc(x, **kwargs) for x in obj],
-        sep=comma,
-        end=TextDoc("}"),
-        indent=kwargs["indent"],
-    )
+    if len(obj) == 0:
+        return TextDoc("set()")
+    else:
+        return bracketed(
+            begin=TextDoc("{"),
+            docs=[pdoc(x, **kwargs) for x in obj],
+            sep=comma,
+            end=TextDoc("}"),
+            indent=kwargs["indent"],
+        )
 
 
 def _pformat_frozenset(obj: frozenset, **kwargs) -> AbstractDoc:
-    return bracketed(
-        begin=TextDoc("frozenset({"),
-        docs=[pdoc(x, **kwargs) for x in obj],
-        sep=comma,
-        end=TextDoc("})"),
-        indent=kwargs["indent"],
-    )
+    if len(obj) == 0:
+        return TextDoc("frozenset()")
+    else:
+        return bracketed(
+            begin=TextDoc("frozenset({"),
+            docs=[pdoc(x, **kwargs) for x in obj],
+            sep=comma,
+            end=TextDoc("})"),
+            indent=kwargs["indent"],
+        )
 
 
 def _pformat_tuple(obj: tuple, **kwargs) -> AbstractDoc:

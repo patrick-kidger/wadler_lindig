@@ -376,3 +376,11 @@ def test_no_respect_pdoc(foo_pdoc, bar_pdoc):
         else:
             assert out == "Bar(foo=Foo())"
     assert out2 == "Bar(foo=Foo())"
+
+
+def test_empty():
+    assert wl.pformat(set()) == "set()"
+    assert wl.pformat(frozenset()) == "frozenset()"
+    assert wl.pformat(dict()) == "{}"
+    assert wl.pformat(list()) == "[]"
+    assert wl.pformat(tuple()) == "()"
