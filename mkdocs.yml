@@ -99,6 +99,7 @@ nav:
         - The __pdoc__ method: custom_pprints.ipynb
         - The '+', 'nest', and 'group' methods: methods.ipynb
         - The '(break-group).nest-break' pattern: pattern.ipynb
+        - Customizing dataclasses: customize_dataclasses.ipynb
     - Reference:
         - api.md
         - faq.md
