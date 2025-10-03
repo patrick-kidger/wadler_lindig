@@ -191,7 +191,7 @@ def test_union():
 
 def test_optional():
     # This has type `types.UnionType`...
-    assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"  # noqa: UP007
+    assert wl.pformat(typing.Optional[int], width=1) == "int\n| None"  # noqa: UP007, UP045
 
 
 # Simple case

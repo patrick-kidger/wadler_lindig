@@ -23,22 +23,28 @@ urls = {repository = "https://github.com/patrick-kidger/wadler_lindig"}
 version = "0.1.7"
 
 [project.optional-dependencies]
-dev = ["numpy", "pre-commit", "pytest"]
+dev = ["pre-commit"]
 docs = [
-  "hippogriffe==0.1.0",
+  "hippogriffe==0.2.2",
+  "griffe==1.7.3",
   "mkdocs==1.6.1",
   "mkdocs-include-exclude-files==0.1.0",
-  "mkdocs-ipynb==0.1.0",
+  "mkdocs-ipynb==0.1.1",
   "mkdocs-material==9.6.7",
-  "mkdocstrings[python]==0.28.3",
+  "mkdocstrings==0.28.3",
+  "mkdocstrings-python==1.16.8",
   "pymdown-extensions==10.14.3"
 ]
+tests = ["numpy", "pytest"]
 
 [tool.hatch.build]
 include = ["wadler_lindig/*"]
 
 [tool.pyright]
 include = ["wadler_lindig", "tests"]
+reportFunctionMemberAccess = false
+reportIncompatibleMethodOverride = true
+reportIncompatibleVariableOverride = false
 
 [tool.ruff]
 extend-include = ["*.ipynb"]
@@ -56,5 +62,6 @@ select = ["E", "F", "I001", "UP"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
+extra-standard-library = ["typing_extensions"]
 lines-after-imports = 2
 order-by-type = true

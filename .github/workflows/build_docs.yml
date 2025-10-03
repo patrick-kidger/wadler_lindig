@@ -29,7 +29,6 @@ jobs:
       - name: Build docs
         run: |
           mkdocs build
-          mkdocs build  # twice, see https://github.com/patrick-kidger/pytkdocs_tweaks
 
       - name: Upload docs
         uses: actions/upload-artifact@v4

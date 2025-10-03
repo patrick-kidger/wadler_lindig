@@ -501,7 +501,7 @@ def pdoc(
         if isinstance(obj, _generic_alias_types):
             return _pformat_generic_alias(obj, **kwargs)
         if isinstance(obj, _type_types):
-            return _pformat_type(obj, **kwargs)
+            return _pformat_type(cast(type, obj), **kwargs)
         if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
             return _pformat_dataclass(obj, **kwargs)
         if _array_kind(obj) is not None:
