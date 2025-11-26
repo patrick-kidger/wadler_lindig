@@ -7,7 +7,7 @@ This library is for you if you need:
 
 Main features:
 
-- Absolutely tiny implementation (77 lines of code for the main Wadler–Lindig algorithm, 223 more for teaching it how to handle all Python types).
+- Absolutely tiny implementation (96 lines of code for the main Wadler–Lindig algorithm, 342 more for teaching it how to handle all Python types).
 - Simpler than the original algorithm by Wadler & Lindig (removes some dead code).
 - Supports multi-line unbroken text strings.
 - Supports ANSI escape codes and colours.
