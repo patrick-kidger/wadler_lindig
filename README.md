@@ -19,6 +19,22 @@ Main features:
 pip install wadler_lindig
 ```
 
+## Quick Start
+
+```python
+import wadler_lindig as wl
+
+# Pretty-print any Python object
+data = {"nested": {"structure": [1, 2, 3, 4, 5]}}
+wl.pprint(data, width=30)
+
+# Get formatted string instead of printing
+formatted = wl.pformat(data, width=30)
+
+# Compare differences between two objects
+wl.pdiff(data, {"nested": {"structure": [1, 2, 3]}})
+```
+
 ## Documentation
 
 Available at [https://docs.kidger.site/wadler_lindig](https://docs.kidger.site/wadler_lindig).
@@ -93,7 +109,7 @@ which consumes a lot more horizontal space.
 
     class MyAmazingClass:
         def __pdoc__(self, **kwargs) -> wl.AbstractDoc:
-            ...  # Create your pretty representation here!
+            ...  # Create your pretty representation here!
 
         def __repr__(self):
             # Calls `__pdoc__` and then formats to a particular width.
