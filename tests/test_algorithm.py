@@ -1,7 +1,8 @@
 import dataclasses
 
+import pytest
 import wadler_lindig as wl
-from wadler_lindig import BreakDoc as Brk, TextDoc as Txt
+from wadler_lindig import BreakDoc as Brk, ConcatDoc as Concat, TextDoc as Txt
 
 
 def test_lindig():
@@ -71,3 +72,15 @@ def test_newlines_in_text():
   ]
 )"""
     assert out == expected_out
+
+
+def test_concat_init():
+    assert wl.pformat(Concat()) == ""
+    assert wl.pformat(Concat(children=())) == ""
+    assert wl.pformat(Concat(Txt("hi"))) == "hi"
+    assert wl.pformat(Concat(Txt("hi"), Txt("bye"))) == "hibye"
+    assert wl.pformat(Concat(children=(Txt("hi"), Txt("bye")))) == "hibye"
+    with pytest.raises(ValueError):
+        wl.pformat(Concat(Txt("hi"), children=()))
+    with pytest.raises(ValueError):
+        wl.pformat(Concat(Txt("hi"), children=(Txt("hi"),)))

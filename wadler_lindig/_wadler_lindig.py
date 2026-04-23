@@ -90,10 +90,12 @@ class ConcatDoc(AbstractDoc):
 
     # Allow calling via both `ConcatDoc(foo, bar, baz)` for convenience, or
     # `ConcatDoc(children=(foo, bar, baz))` for consistency with its repr.
-    def __init__(self, *args, children=None):
-        if len(args) > 0 and children is None:
+    def __init__(
+        self, *args: AbstractDoc, children: None | tuple[AbstractDoc, ...] = None
+    ):
+        if children is None:
             children = args
-        elif len(args) > 0 or children is None:
+        elif len(args) > 0:
             raise ValueError(
                 "Must be called as either `ConcatDoc(children=(foo, bar, ...))` or as "
                 "`ConcatDoc(foo, bar, ...)` or as `foo + bar + ...`."
