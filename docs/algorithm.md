@@ -12,7 +12,7 @@ There are five kinds of Wadler–Lindig document:
 - [`wadler_lindig.ConcatDoc`][]: concatenates multiple documents together.
 - [`wadler_lindig.GroupDoc`][]: all elements in the group will either be laid out horizontally together, or vertically together.
 - [`wadler_lindig.NestDoc`][]: if laying out vertically, then all child `BreakDoc`s will have this much indent added after their newlines.
-- [`wadler_lindig.TextDoc`][]: an unbroken string of text.
+- [`wadler_lindig.TextDoc`][]: an unbroken string of text. Pass `width=False` for text (e.g. HTML tags) that should not count towards the line width.
 
 As such, the `wadler_lindig` library actually does two distinct things:
 
