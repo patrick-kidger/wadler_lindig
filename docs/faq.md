@@ -43,3 +43,18 @@ which consumes a lot more horizontal space.
 ### What is the difference to `black` or `rust format`?
 
 The above are formatters for your source code. This `wadler_lindig` library is intended as an alternative to the built-in `pprint` library, which pretty-format Python objects at runtime.
+
+### How do I emit markup (e.g. HTML tags) without it counting towards the line width?
+
+Use `TextDoc(..., width=False)`. The text is emitted as-is but takes no space when deciding where to break lines:
+
+```python
+import wadler_lindig as wl
+
+def tag(t):
+    return wl.TextDoc(t, width=False)
+
+doc = tag("<b>") + wl.TextDoc("hello") + tag("</b>")
+```
+
+Escaping any special characters (such as a literal `<`) in your own text is up to you.

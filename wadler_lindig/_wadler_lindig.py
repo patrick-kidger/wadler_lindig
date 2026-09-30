@@ -15,7 +15,7 @@ References:
 Inspired by JAX's use of the same references above, but re-implemented from scratch.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ._ansi import ansi_strip
 
@@ -44,14 +44,22 @@ class AbstractDoc:
 
 @dataclass(frozen=True)
 class TextDoc(AbstractDoc):
-    """Represents an unbroken piece of text to display. May include newlines."""
+    """Represents an unbroken piece of text to display. May include newlines.
+
+    If `width=False` then the text is emitted but does not count towards the line
+    width. Escaping any markup inside the text is the caller's responsibility.
+    """
 
     text: str
+    width: bool = field(default=True, kw_only=True)
 
 
 TextDoc.__init__.__doc__ = """**Arguments:**
 
 - `text`: the string of text.
+- `width`: whether this text counts towards the line width. Use `False` for markup
+    that is emitted but takes no space in the layout, for example HTML tags like
+    `<div>`. Defaults to `True`.
 """
 
 
@@ -169,8 +177,9 @@ def _vertical(doc: AbstractDoc, width: int) -> bool:
     todo: list[AbstractDoc] = [doc]
     while len(todo) > 0 and width >= 0:
         match todo.pop():
-            case TextDoc(text):
-                width -= max(map(len, ansi_strip(text).splitlines()), default=0)
+            case TextDoc(text, width=counts):
+                if counts:
+                    width -= max(map(len, ansi_strip(text).splitlines()), default=0)
             case BreakDoc(text):
                 width -= len(ansi_strip(text))
             case ConcatDoc(children):
@@ -216,9 +225,10 @@ def pformat_doc(doc: AbstractDoc, width: int) -> str:
                 vertical = vertical2
             case int(indent2):
                 indent = indent2
-            case TextDoc(text):
+            case TextDoc(text, width=counts):
                 outs.append(text.replace("\n", "\n" + " " * width_so_far))
-                width_so_far += len(ansi_strip(text.rsplit("\n", 1)[-1]))
+                if counts:
+                    width_so_far += len(ansi_strip(text.rsplit("\n", 1)[-1]))
             case BreakDoc(text):
                 if vertical:
                     outs.append("\n" + " " * indent)
