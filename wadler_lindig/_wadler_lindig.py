@@ -254,7 +254,7 @@ def pformat_doc(doc: AbstractDoc, width: int) -> str:
                 if force_vertical:
                     todo.append(vertical)
                     todo.append(child)
-                    todo.append(True)
+                    vertical = True
                 elif vertical and not _vertical(child, width - width_so_far):
                     # If we are currently in vertical mode but do not need to remain
                     # so, then switch to horizontal mode.
