@@ -86,6 +86,21 @@ def _tagged_list(tag_width: bool):
     ).group()
 
 
+def test_force_vertical_group():
+    child = Txt("foo") + Brk(" ") + Txt("bar")
+    assert wl.pformat(child.group(), width=80) == "foo bar"
+    assert wl.pformat(child.group(force_vertical=True), width=80) == "foo\nbar"
+    assert wl.pformat(wl.GroupDoc(child, force_vertical=True), width=80) == "foo\nbar"
+
+
+def test_force_vertical_nested_group():
+    child = Txt("foo") + Brk(" ") + Txt("bar")
+    doc = (Txt("[") + (Brk("") + child).nest(2) + Brk("") + Txt("]")).group(
+        force_vertical=True
+    )
+    assert wl.pformat(doc, width=80) == "[\n  foo\n  bar\n]"
+
+
 def test_zero_width_text_matches_plain_layout():
     import re
 

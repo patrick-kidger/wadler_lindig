@@ -37,9 +37,12 @@ class AbstractDoc:
         """
         return NestDoc(self, indent=indent)
 
-    def group(self) -> "GroupDoc":
-        """`doc.group()` offers a convenient shorthand for `GroupDoc(doc)`."""
-        return GroupDoc(self)
+    def group(self, *, force_vertical: bool = False) -> "GroupDoc":
+        """`doc.group()` offers a convenient shorthand for `GroupDoc(doc)`.
+
+        Pass `force_vertical=True` to always lay out this group vertically.
+        """
+        return GroupDoc(self, force_vertical=force_vertical)
 
 
 @dataclass(frozen=True)
@@ -160,14 +163,19 @@ class GroupDoc(AbstractDoc):
     ```
     then `foo`, `bar` and `[baz, qux]` are laid out vertically, but the sub-group
     `[baz, qux]` is judged to have enough space, and so is laid out horizontally.
+
+    Set `force_vertical=True` to always lay out this group vertically.
     """
 
     child: AbstractDoc
+    force_vertical: bool = field(default=False, kw_only=True)
 
 
 GroupDoc.__init__.__doc__ = """**Arguments:**
 
 - `child`: the child document to display.
+- `force_vertical`: if `True`, always lay out this group vertically. Defaults to
+    `False`.
 """
 
 
@@ -186,7 +194,7 @@ def _vertical(doc: AbstractDoc, width: int) -> bool:
                 todo.extend(reversed(children))
             case NestDoc(child, _):
                 todo.append(child)
-            case GroupDoc(child):
+            case GroupDoc(child, force_vertical=_):
                 todo.append(child)
             case x:
                 assert False, str(x)
@@ -217,8 +225,12 @@ def pformat_doc(doc: AbstractDoc, width: int) -> str:
     vertical: bool = True
     indent: int = 0
     # Start with a `GroupDoc` so that the first thing we do is check whether we should
-    # be in vertical or horizontal layout.
-    todo: list[bool | int | AbstractDoc] = [GroupDoc(doc)]
+    # be in vertical or horizontal layout. Do not wrap an existing `GroupDoc`, as that
+    # would override a forced-vertical root group.
+    if isinstance(doc, GroupDoc):
+        todo: list[bool | int | AbstractDoc] = [doc]
+    else:
+        todo = [GroupDoc(doc)]
     while len(todo) > 0:
         match todo.pop():
             case bool(vertical2):
@@ -242,8 +254,12 @@ def pformat_doc(doc: AbstractDoc, width: int) -> str:
                 todo.append(indent)
                 todo.append(child)
                 indent += extra_indent
-            case GroupDoc(child):
-                if vertical and not _vertical(child, width - width_so_far):
+            case GroupDoc(child, force_vertical=force_vertical):
+                if force_vertical:
+                    todo.append(vertical)
+                    todo.append(child)
+                    vertical = True
+                elif vertical and not _vertical(child, width - width_so_far):
                     # If we are currently in vertical mode but do not need to remain
                     # so, then switch to horizontal mode.
                     todo.append(True)
