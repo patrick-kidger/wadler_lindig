@@ -37,6 +37,7 @@ def test_numpy_array():
     assert wl.pformat(np.array(1)) == "i64[](numpy)"
     assert wl.pformat(np.arange(12).reshape(3, 4)) == "i64[3,4](numpy)"
     assert wl.pformat(np.array(1), short_arrays=False) == "array(1)"
+    assert wl.pformat(np.array(1), short_arrays="compact") == "i64[](numpy)"
 
 
 def test_builtins():

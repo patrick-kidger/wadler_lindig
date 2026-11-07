@@ -390,7 +390,7 @@ def _none(_):
 def pdoc(
     obj: Any,
     indent: int = 2,
-    short_arrays: bool = True,
+    short_arrays: object = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
     hide_defaults: bool = True,
     show_type_module: bool = True,
@@ -410,7 +410,7 @@ def pdoc(
         they will be indented by this amount and placed on separate lines.
     - `short_arrays`: whether to print a NumPy array / PyTorch tensor / JAX array as a
         short summary of the form `f32[3,4]` (here indicating a `float32` matrix of
-        shape `(3, 4)`)
+        shape `(3, 4)`). Any truthy value enables this.
     - `custom`: a way to pretty-doc custom types. This will be called on every object it
         encounters. If its return is `None` then the usual behaviour will be performed.
         If its return is an `AbstractDoc` then that will be used instead.
@@ -517,7 +517,7 @@ def pformat(
     *,
     width: int = 88,
     indent: int = 2,
-    short_arrays: bool = True,
+    short_arrays: object = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
     hide_defaults: bool = True,
     show_type_module: bool = True,
@@ -550,7 +550,7 @@ def pprint(
     *,
     width: int = 88,
     indent: int = 2,
-    short_arrays: bool = True,
+    short_arrays: object = True,
     custom: Callable[[Any], None | AbstractDoc] = _none,
     hide_defaults: bool = True,
     show_type_module: bool = True,
@@ -570,7 +570,7 @@ def pprint(
         they will be indented by this amount and placed on separate lines.
     - `short_arrays`: whether to print a NumPy array / PyTorch tensor / JAX array as a
         short summary of the form `f32[3,4]` (here indicating a `float32` matrix of
-        shape `(3, 4)`)
+        shape `(3, 4)`). Any truthy value enables this.
     - `custom`: a way to pretty-print custom types. This will be called on every object
         it . If its return is `None` then the default behaviour will be performed. If
         its return is an [`wadler_lindig.AbstractDoc`][] then that will be used instead.
